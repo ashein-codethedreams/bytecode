@@ -1,11 +1,13 @@
+import React, { useEffect, useState } from "react";
 import { Button, Upload, message } from "antd";
 import { UploadOutlined, SendOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import FileViewer from "./FileViewer"; // Assuming you have a FileViewer component
 
 const ChatArea = () => {
   const [fileList, setFileList] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fileData, setFileData] = useState(null);
 
   const uploadButton = <Button icon={<UploadOutlined />}></Button>;
 
@@ -23,9 +25,7 @@ const ChatArea = () => {
 
       reader.onloadend = () => {
         // Extract the Base64 content without the data URI prefix
-
         const base64Content = reader.result.split(",")[1];
-
         resolve(base64Content);
       };
       reader.onerror = reject;
@@ -61,6 +61,7 @@ const ChatArea = () => {
 
         const responseData = await response.json();
         console.log(responseData);
+        setFileData(responseData); // Store the file data in state
         message.success("File sent successfully");
       }
     } catch (error) {
@@ -71,11 +72,35 @@ const ChatArea = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const response = await fetch(
+          "http://192.168.0.121:8080/api/conversations/2",
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        console.log(responseData);
+        setFileData(responseData); // Store the file data in state
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    };
+
+    fetchFiles();
+  }, []);
+
   return (
     <div>
-      <div className="w-[300px] border-2 border-red-500 h-[300px] mb-2">
-        TEXT AREA
-      </div>
       <div className="flex">
         <Upload
           action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
@@ -95,6 +120,13 @@ const ChatArea = () => {
           </Button>
         </div>
       </div>
+      {fileData && (
+        <FileViewer
+          base64File={fileData.fileBytes}
+          fileName={fileData.fileName}
+          fileType={fileData.fileType}
+        />
+      )}
     </div>
   );
 };
