@@ -1,10 +1,11 @@
-import { Button, Upload } from "antd";
+import { Button, Upload, message } from "antd";
 import { UploadOutlined, SendOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 const ChatArea = () => {
   const [fileList, setFileList] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const uploadButton = <Button icon={<UploadOutlined />}></Button>;
 
@@ -20,7 +21,9 @@ const ChatArea = () => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        resolve(reader.result);
+        // Extract the Base64 content without the data URI prefix
+        const base64Content = reader.result.split(",")[1];
+        resolve(base64Content);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -28,10 +31,36 @@ const ChatArea = () => {
   };
 
   const handleSendClick = async () => {
-    if (selectedFile) {
-      const bytecode = await convertFileToBytecode(selectedFile);
-      // Now you can use the 'bytecode' for further processing or send it to your server
-      console.log(bytecode);
+    try {
+      if (selectedFile) {
+        setLoading(true);
+
+        const bytecode = await convertFileToBytecode(selectedFile);
+
+        const response = await fetch(
+          "http://192.168.0.121:8080/api/conversations",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ file_bytes: bytecode }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        console.log(responseData);
+        message.success("File sent successfully");
+      }
+    } catch (error) {
+      console.error("Error sending file:", error);
+      message.error("Error sending file");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,10 +80,12 @@ const ChatArea = () => {
         </Upload>
         <div className="mt-8">
           <Button
-            disabled={fileList.length < 1}
+            disabled={fileList.length < 1 || loading}
             icon={<SendOutlined />}
             onClick={handleSendClick}
-          ></Button>
+          >
+            {loading ? "Sending..." : "Send"}
+          </Button>
         </div>
       </div>
     </div>
