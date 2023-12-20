@@ -20,9 +20,12 @@ const ChatArea = () => {
   const convertFileToBytecode = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+
       reader.onloadend = () => {
         // Extract the Base64 content without the data URI prefix
+
         const base64Content = reader.result.split(",")[1];
+
         resolve(base64Content);
       };
       reader.onerror = reject;
@@ -37,6 +40,10 @@ const ChatArea = () => {
 
         const bytecode = await convertFileToBytecode(selectedFile);
 
+        const body = {
+          file_type: selectedFile.type,
+          file_bytes: bytecode,
+        };
         const response = await fetch(
           "http://192.168.0.121:8080/api/conversations",
           {
@@ -44,7 +51,7 @@ const ChatArea = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ file_bytes: bytecode }),
+            body: JSON.stringify(body),
           }
         );
 
