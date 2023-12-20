@@ -28,7 +28,8 @@ const FileViewer = ({ base64File, fileName, fileType }) => {
 
   return (
     <div>
-      <h2>{fileName}</h2>
+      <p>{fileName}</p>
+      <br />
       {fileUrl && (
         <>
           {fileType.startsWith("image") ? (
@@ -45,7 +46,6 @@ const FileViewer = ({ base64File, fileName, fileType }) => {
               src={fileUrl}
               width="100%"
               height="500px"
-              frameBorder="0"
             />
           )}
         </>

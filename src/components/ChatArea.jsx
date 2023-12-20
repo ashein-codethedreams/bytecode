@@ -120,6 +120,7 @@ const ChatArea = () => {
           </Button>
         </div>
       </div>
+      <br />
       {fileData && (
         <FileViewer
           base64File={fileData.fileBytes}
