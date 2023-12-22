@@ -123,6 +123,7 @@ const ChatArea = () => {
       <br />
       {fileData && (
         <FileViewer
+          createdAt={fileData.createdAt}
           base64File={fileData.fileBytes}
           fileName={fileData.fileName}
           fileType={fileData.fileType}
